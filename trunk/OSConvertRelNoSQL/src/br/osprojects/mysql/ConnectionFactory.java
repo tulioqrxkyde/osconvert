@@ -10,11 +10,11 @@ import java.sql.SQLException;
 
 public class ConnectionFactory {
 
-    public Connection getConnection() {
+    public Connection getConnection(String user, String pass, String adress, String database) {
         System.out.println("Conectando ao Banco de Dados...");
         try {
-            return DriverManager.getConnection("jdbc:mysql://localhost/bibliotecaeeepjwm", 
-                    "root", "");
+            return DriverManager.getConnection("jdbc:mysql://"+adress+"/"+database, 
+                    user, pass);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
