@@ -5,7 +5,6 @@
 package br.osprojects.mysql;
 
 import static br.osprojects.mysql.MainMySQL.client;
-import static br.osprojects.mysql.MainMySQL.conn;
 import java.nio.ByteBuffer;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -28,7 +27,7 @@ import org.apache.thrift.TException;
  *
  * @author tulio.xcrtf
  */
-public class Convert extends MainMySQL {
+public class Convert {
 
     private static DatabaseMetaData dbmd;
     private static Statement st;
@@ -48,7 +47,11 @@ public class Convert extends MainMySQL {
      * @throws Exception
      */
     public static void processConvert() throws Exception {
-        dbmd = conn.getMetaData();
+        try {
+            dbmd = MainMySQL.connection.getMetaData();
+        } catch (SQLException ex) {
+            
+        }
         try {
             ResultSet tabelas = dbmd.getTables(null, null, "%", null);
             while (tabelas.next()) {
@@ -58,7 +61,7 @@ public class Convert extends MainMySQL {
                 columnFamilyCreated = false;
                 String tableName = tabelas.getString(3); /* Nome da Tabela */
                 columnFamily = new CfDef();
-                columnFamily.setKeyspace(KeySpace);
+                columnFamily.setKeyspace(MainMySQL.KeySpace);
                 columnFamily.setName(tableName);
                 ResultSet colunas = dbmd.getColumns(null, null, tableName, null);
                 ResultSet chavesPrimarias = dbmd.getPrimaryKeys(null, null, tableName);
@@ -68,10 +71,10 @@ public class Convert extends MainMySQL {
                 c.listIncrements(chavesPrimarias, chavesImportadas, chavesEstrangeiras);
 
                 /* Passa todas as colunas encontradas na tabela para o método convertSampleColumns */
-                // c.convertSampleColumns(columnFamily, colunas);
+                 c.convertSampleColumns(columnFamily, colunas);
 
                 // listaTabelas.add(tableName);
-                // c.listIncrements(chavesPrimarias, chavesImportadas, chavesEstrangeiras);
+                 c.listIncrements(chavesPrimarias, chavesImportadas, chavesEstrangeiras);
 
                 c.convertImportColumns(columnFamily, dbmd.getImportedKeys(null, null, tableName));
                 listaTabelas.add(tableName);
@@ -254,7 +257,7 @@ public class Convert extends MainMySQL {
                 firstColumn = new StringBuilder(colunas[0].getString("COLUMN_NAME"));
             }
 
-            st = conn.createStatement();
+            st = MainMySQL.connection.createStatement();
             if (type == 3) {
                 ResultSet getExportedColumns = dbmd.getImportedKeys(null, null, colunas[1].getString(7));
                 while (getExportedColumns.next()) {
